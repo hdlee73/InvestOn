@@ -50,17 +50,17 @@
 Java 17, Android SDK 35, Gradle wrapper 8.9, Android Gradle Plugin 8.7.3.
 
 ```bash
-./gradlew assembleDebug lintDebug
+./gradlew assembleRelease lintRelease
 node --test tests/*.test.cjs
 ```
 
-새 저장소를 `hdlee73/InvestOn`으로 만들고 이 폴더 내용을 `main`에 올리면 GitHub Actions가 빌드·lint를 수행합니다. 성공 시 `InvestOn-APK` artifact에서 설치 APK를 받습니다.
+새 저장소를 `hdlee73/InvestOn`으로 만들고 이 폴더 내용을 `main`에 올리면 GitHub Actions가 빌드·lint를 수행합니다. 성공 시 `InvestOn-build-kit` artifact에서 서명 전 APK를 받습니다. 설치용 서명 APK는 Releases에서 받습니다.
 
-`v1.0.0` 태그를 push하면 `Releases`에 APK가 자동 게시됩니다. Actions 사용 한도·네트워크·저장소 정책으로 빌드가 실패할 수 있으므로 실제 성공 여부를 확인해야 합니다.
+빌드·검증을 마친 APK에 별도로 서명한 뒤 Releases에 게시합니다. Actions 사용 한도·네트워크·저장소 정책으로 빌드가 실패할 수 있으므로 실제 성공 여부를 확인해야 합니다.
 
-### 업데이트 설치용 서명 유지
+### APK 서명
 
-첫 빌드의 키는 인증된 GitHub Actions artifact `InvestOn-signing-backup-private`에 보관됩니다. 다음 빌드는 직전 성공 빌드의 키를 자동 복원하며 복원 실패 시 빌드를 중단해 서명 변경을 피합니다. 해당 artifact는 90일 뒤 만료하므로, 그 전에 키를 내려받아 Base64로 인코딩해 repository secret `INVESTON_DEBUG_KEYSTORE_BASE64`에 보관하면 계속 같은 서명으로 업데이트할 수 있습니다. 키를 공개 저장소에 commit하지 마세요. 릴리즈에는 키를 첨부하지 않습니다.
+CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-kit` artifact로 제공합니다. 서명 키를 공개 저장소나 Actions artifact에 저장하지 않습니다. 배포 담당자가 별도로 안전하게 보관한 키로 APK에 서명하고 Releases에 첨부합니다. 다음 업데이트도 같은 키를 사용해야 기존 설치 위에 업데이트할 수 있습니다.
 
 ## 검증 상태
 
