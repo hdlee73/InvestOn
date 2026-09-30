@@ -1,0 +1,7 @@
+{
+  "name": "investon-verification",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "test": "node --test tests/core.test.cjs", "test:ui": "node tests/ui-smoke.cjs" },
+  "devDependencies": { "playwright": "1.62.1" }
+}

@@ -1,0 +1,69 @@
+name: Build Android APK
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Check calculation and UI logic
+        run: node --test tests/*.test.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: UI flow verification
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          npm run test:ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: InvestOn-UI-verification
+          path: verification/
+      - name: Restore stable APK signing key
+        env:
+          KEYSTORE: ${{ secrets.INVESTON_DEBUG_KEYSTORE_BASE64 }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$KEYSTORE" ]; then
+            printf '%s' "$KEYSTORE" | base64 -d > ~/.android/debug.keystore
+          else
+            previous=$(gh run list --workflow android.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+            if [ -n "$previous" ]; then
+              gh run download "$previous" --name InvestOn-signing-backup-private --dir ~/.android
+              test -s ~/.android/debug.keystore
+            fi
+          fi
+      - name: Build and lint
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug lintDebug
+          cp app/build/outputs/apk/debug/app-debug.apk InvestOn-1.0.0.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: InvestOn-APK
+          path: InvestOn-1.0.0.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: InvestOn-signing-backup-private
+          path: ~/.android/debug.keystore
+          retention-days: 90
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" InvestOn-1.0.0.apk --title "투자온 $GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
