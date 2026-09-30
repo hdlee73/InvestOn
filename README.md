@@ -45,6 +45,10 @@
 - 수수료·세금 제외. 시세가 없는 종목을 0원으로 계산하지 않고 `일부 자산` 경고 표시
 - 계좌와 보유내역은 이 기기에만 저장. Android 자동 백업은 비활성화. JSON 내보내기 파일에는 보유내역이 포함되므로 개인적으로 보관
 
+## 설치
+
+[투자온 1.0.0 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.0)에서 `InvestOn-1.0.0.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
+
 ## 빌드 / GitHub 게시
 
 Java 17, Android SDK 35, Gradle wrapper 8.9, Android Gradle Plugin 8.7.3.
@@ -66,7 +70,10 @@ CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-k
 
 - 손익·계좌 합계·환산·소수 수량·부호·백업 형식 자동 테스트
 - JavaScript 구문 검사
-- Android APK 빌드 / lint / 실기기 네트워크·알림 검증: 아직 미완료 (현재 작업 환경에 SDK가 없고 설치용 네트워크 연결 불가)
+- Release APK 빌드 및 Android lint: GitHub Actions 성공
+- 화면 사용 흐름 테스트: 관심종목, 차트, 국내·미국 보유종목, 혼합 계좌 합계, 목표가, 백업, 폰/폴드 화면 폭 통과
+- 설치용 APK v2/v3 서명 검증: 통과
+- 실기기 네트워크·알림 검증: 아직 미완료
 
 `tests/ui-smoke.cjs`는 Playwright가 설치된 환경에서 실행할 수 있는 화면/사용 흐름 테스트이며, fixture 시세는 테스트 안에서만 주입합니다. 앱에는 테스트 시세가 들어가지 않습니다.
 
