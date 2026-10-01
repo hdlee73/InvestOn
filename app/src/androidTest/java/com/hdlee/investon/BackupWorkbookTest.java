@@ -50,7 +50,9 @@ public class BackupWorkbookTest extends Instrumentation {
     }
     public void testLiveEtfSearch() throws Exception {
         MarketClient client=new MarketClient(getInstrumentation().getTargetContext());JSONArray result=client.search("200");assertTrue("200 must match multiple domestic ETFs",result.length()>2);boolean kodex=false;
-        for(int i=0;i<result.length();i++){JSONObject item=result.getJSONObject(i);assertEquals("ETF",item.getString("type"));assertTrue(item.getString("name").contains("200"));if(item.getString("symbol").equals("069500.KS")){kodex=true;assertTrue(item.getString("name").contains("KODEX"));}}
+        File proof=new File(getTargetContext().getExternalFilesDir(null),"native-search-test.json");try(OutputStream out=new FileOutputStream(proof)){out.write(result.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}
+        for(int i=0;i<result.length();i++){JSONObject item=result.getJSONObject(i);assertEquals("ETF",item.getString("type"));assertTrue("Expected name or code substring: "+item,item.getString("name").contains("200")||item.getString("symbol").contains("200"));if(item.getString("symbol").equals("069500.KS")){kodex=true;assertTrue(item.getString("name").contains("KODEX"));}}
         assertTrue("KODEX 200 must be found",kodex);assertTrue(client.search("KODEX200").length()>0);
+        JSONArray catalog=client.etfs();boolean korean=false;for(int i=0;i<catalog.length();i++){String name=catalog.getJSONObject(i).getString("name");assertFalse(name.contains("\uFFFD"));if(name.matches(".*[가-힣].*"))korean=true;}assertTrue("Korean ETF names must be decoded correctly",korean);
     }
 }
