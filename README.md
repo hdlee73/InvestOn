@@ -47,7 +47,7 @@
 
 ## 설치
 
-[투자온 1.0.1 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.1)에서 `InvestOn-1.0.1.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
+[투자온 1.0.2 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.2)에서 `InvestOn-1.0.2.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
 
 ## 빌드 / GitHub 게시
 
@@ -65,6 +65,13 @@ node --test tests/*.test.cjs
 ### APK 서명
 
 CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-kit` artifact로 제공합니다. 서명 키를 공개 저장소나 Actions artifact에 저장하지 않습니다. 배포 담당자가 별도로 안전하게 보관한 키로 APK에 서명하고 Releases에 첨부합니다. 다음 업데이트도 같은 키를 사용해야 기존 설치 위에 업데이트할 수 있습니다.
+
+## 1.0.2 변경
+
+- 전체 계좌 선택 목록, 기존 계좌 선택·새 계좌 입력 지원
+- 하단 메뉴 아이콘·글씨 겹침 수정
+- 관심종목 반복 안내 제거, 자산 비중·상세 설명 접기
+- 여러 계좌 저장·선택·보유종목 계좌 변경, 화면 폭 320/390/760의 메뉴 간격 회귀 검사 통과
 
 ## 검증 상태
 
