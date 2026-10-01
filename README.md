@@ -47,7 +47,7 @@
 
 ## 설치
 
-[투자온 1.0.0 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.0)에서 `InvestOn-1.0.0.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
+[투자온 1.0.1 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.1)에서 `InvestOn-1.0.1.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
 
 ## 빌드 / GitHub 게시
 
@@ -73,7 +73,8 @@ CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-k
 - Release APK 빌드 및 Android lint: GitHub Actions 성공
 - 화면 사용 흐름 테스트: 관심종목, 차트, 국내·미국 보유종목, 혼합 계좌 합계, 목표가, 백업, 폰/폴드 화면 폭 통과
 - 설치용 APK v2/v3 서명 검증: 통과
-- 실기기 네트워크·알림 검증: 아직 미완료
+- Android 15 에뮬레이터: 최초 실행·재실행·관심종목 화면·알림 작업 등록 통과, 코스피·코스닥 실제 시세 수신 확인
+- 실기기 목표가격 알림 검증: 아직 미완료
 
 `tests/ui-smoke.cjs`는 Playwright가 설치된 환경에서 실행할 수 있는 화면/사용 흐름 테스트이며, fixture 시세는 테스트 안에서만 주입합니다. 앱에는 테스트 시세가 들어가지 않습니다.
 
@@ -87,3 +88,4 @@ CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-k
 ## 라이선스
 
 앱 소스: MIT. 외부 시세·기사 데이터는 각 제공처의 권리와 약관에 따릅니다.
+
