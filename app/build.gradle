@@ -8,7 +8,7 @@ android {
         targetSdk 35
         versionCode 5
         versionName '1.0.4'
-        testInstrumentationRunner 'android.test.InstrumentationTestRunner'
+        testInstrumentationRunner 'com.hdlee.investon.BackupWorkbookTest'
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     buildTypes { release { minifyEnabled false } }

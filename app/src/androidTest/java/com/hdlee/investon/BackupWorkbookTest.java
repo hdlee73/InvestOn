@@ -1,11 +1,26 @@
 package com.hdlee.investon;
 
-import android.test.InstrumentationTestCase;
+import android.app.Instrumentation;
+import android.app.Activity;
+import android.os.Bundle;
 import org.json.*;
 import java.io.*;
 import java.util.zip.*;
 
-public class BackupWorkbookTest extends InstrumentationTestCase {
+public class BackupWorkbookTest extends Instrumentation {
+    @Override public void onCreate(Bundle arguments) { super.onCreate(arguments);start(); }
+    @Override public void onStart() { new Thread(()-> { Bundle result=new Bundle();try {
+        testRoundTrip();testEmptyBackup();testRejectNonWorkbook();testEditedExcelSharedStringsAndOrder();testLiveEtfSearch();
+        result.putString("stream","\nOK (5 tests)\n");finish(Activity.RESULT_OK,result);
+    } catch(Throwable e) { StringWriter text=new StringWriter();e.printStackTrace(new PrintWriter(text));result.putString("stream","\nFAILURES\n"+text);finish(Activity.RESULT_CANCELED,result); } },"native-backup-tests").start(); }
+    Instrumentation getInstrumentation() { return this; }
+    static void fail(String text) { throw new AssertionError(text); }
+    static void assertTrue(boolean value) { assertTrue("Expected true",value); }
+    static void assertTrue(String text,boolean value) { if(!value)fail(text); }
+    static void assertFalse(boolean value) { assertTrue(!value); }
+    static void assertEquals(String a,String b) { if(!a.equals(b))fail(a+" != "+b); }
+    static void assertEquals(int a,int b) { if(a!=b)fail(a+" != "+b); }
+    static void assertEquals(double a,double b,double delta) { if(Math.abs(a-b)>delta)fail(a+" != "+b); }
     JSONObject sample() throws Exception {
         return new JSONObject("{\"version\":1,\"watch\":[{\"symbol\":\"069500.KS\",\"name\":\"KODEX 200\",\"currency\":\"KRW\",\"type\":\"ETF\"},{\"symbol\":\"005930.KS\",\"name\":\"삼성전자\",\"currency\":\"KRW\",\"type\":\"EQUITY\"}],\"accounts\":[\"퇴직연금\",\"ISA & 투자\"],\"holdings\":[{\"symbol\":\"069500.KS\",\"name\":\"KODEX 200\",\"currency\":\"KRW\",\"type\":\"ETF\",\"account\":\"퇴직연금\",\"quantity\":1.125,\"cost\":38000.5,\"id\":\"holding-1\"}],\"rules\":[{\"symbol\":\"069500.KS\",\"name\":\"KODEX 200\",\"currency\":\"KRW\",\"type\":\"ETF\",\"target\":40000,\"direction\":\"above\",\"active\":false,\"id\":\"rule-1\"}]}");
     }
