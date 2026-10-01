@@ -23,6 +23,7 @@ public final class MarketClient {
         c.setConnectTimeout(8000); c.setReadTimeout(10000);
         c.setRequestProperty("User-Agent", "Mozilla/5.0 InvestOn/1.0");
         c.setRequestProperty("Accept", "application/json,text/xml,*/*");
+        c.setRequestProperty("Referer", "https://m.stock.naver.com/");
         try {
             if(c.getResponseCode()!=200) throw new IOException("시세 제공처 응답 " + c.getResponseCode());
             try(InputStream in=c.getInputStream(); ByteArrayOutputStream out=new ByteArrayOutputStream()) {
@@ -168,9 +169,14 @@ public final class MarketClient {
             if(out.length()>0&&(key.matches("[0-9]{1,6}")||key.matches(".*(kodex|tiger|rise|ace|sol|plus|kosef|hanaro|etf).*"))) return out;
         } catch(Exception e) { last=e; }
         try {
-            JSONObject n=new JSONObject(get("https://ac.finance.naver.com/ac?q="+encode(query)+"&q_enc=UTF-8&st=111&sug=all&frm=stock&r_format=json&r_enc=UTF-8"));
+            JSONObject n=new JSONObject(get("https://m.stock.naver.com/front-api/search/autoComplete?query="+encode(query)+"&target=stock,index"));
+            collectDomestic(n,out,seen);
+        } catch(Exception e) { last=e; }
+        if(out.length()==0) try {
+            JSONObject n=new JSONObject(get("https://ac.finance.naver.com/ac?q="+encode(query)+"&q_enc=UTF-8&st=111&sug=all&frm=stock"));
             collectNaver(n.getJSONArray("items"),out,seen);
         } catch(Exception e) { last=e; }
+        if(out.length()>0&&query.matches(".*[가-힣].*")) return out;
         try {
             JSONObject y=new JSONObject(get("https://query1.finance.yahoo.com/v1/finance/search?q="+encode(query)+"&quotesCount=15&newsCount=0"));
             JSONArray a=y.optJSONArray("quotes");
@@ -189,6 +195,18 @@ public final class MarketClient {
         }
         if(out.length()==0&&last!=null) throw new IOException("검색 연결 실패 · 종목 코드로 다시 검색해 주세요",last);
         return out;
+    }
+    void collectDomestic(Object value,JSONArray out,Set<String> seen) throws Exception {
+        if(value instanceof JSONObject) {
+            JSONObject item=(JSONObject)value;
+            String code=item.optString("code"),name=item.optString("name"),url=item.optString("url"),reuters=item.optString("reutersCode");
+            if(code.matches("[A-Z0-9]{6}")&&!name.isEmpty()&&(url.contains("/domestic/stock/")||reuters.matches("[A-Z0-9]{6}\\.(KS|KQ)"))) {
+                String s=reuters.matches("[A-Z0-9]{6}\\.(KS|KQ)")?reuters:code+(item.optString("typeName").contains("코스닥")?".KQ":".KS");
+                if(seen.add(s))out.put(new JSONObject().put("symbol",s).put("name",name).put("currency","KRW").put("type","EQUITY"));
+                return;
+            }
+            Iterator<String> keys=item.keys();while(keys.hasNext())collectDomestic(item.opt(keys.next()),out,seen);
+        } else if(value instanceof JSONArray) { JSONArray a=(JSONArray)value;for(int i=0;i<a.length();i++)collectDomestic(a.opt(i),out,seen); }
     }
     static String field(JSONArray a,int index) { JSONArray child=a.optJSONArray(index); return child!=null?child.optString(0):a.optString(index); }
     void collectNaver(JSONArray a,JSONArray out,Set<String> seen) throws Exception {

@@ -56,7 +56,15 @@ public class BackupWorkbookTest extends Instrumentation {
         JSONArray catalog=client.etfs();boolean korean=false;for(int i=0;i<catalog.length();i++){String name=catalog.getJSONObject(i).getString("name");assertFalse(name.contains("\uFFFD"));if(name.matches(".*[가-힣].*"))korean=true;}assertTrue("Korean ETF names must be decoded correctly",korean);
     }
     public void testLiveStockAndNewEtfSearch() throws Exception {
-        MarketClient client=new MarketClient(getTargetContext());JSONArray stocks=client.search("삼성전기");boolean found=false;
+        MarketClient client=new MarketClient(getTargetContext());JSONArray stocks;
+        try { stocks=client.search("삼성전기"); } catch(Exception failure) {
+            StringBuilder details=new StringBuilder(failure.toString());
+            for(String url:new String[]{"https://m.stock.naver.com/front-api/search/autoComplete?query="+MarketClient.encode("삼성전기")+"&target=stock,index", "https://ac.finance.naver.com/ac?q="+MarketClient.encode("삼성전기")+"&q_enc=UTF-8&st=111&sug=all&frm=stock"}) {
+                try { details.append(" RAW ").append(client.get(url)); } catch(Exception e) { details.append(" ").append(e); }
+            }
+            throw new AssertionError(details.toString(),failure);
+        }
+        boolean found=false;
         for(int i=0;i<stocks.length();i++){JSONObject item=stocks.getJSONObject(i);if(item.getString("symbol").equals("009150.KS")){found=true;assertTrue(item.getString("name").contains("삼성전기"));}}
         if(!found)fail("Samsung Electro-Mechanics not found: "+stocks+" raw="+client.get("https://ac.finance.naver.com/ac?q="+MarketClient.encode("삼성전기")+"&q_enc=UTF-8&st=111&sug=all&frm=stock&r_format=json&r_enc=UTF-8"));
         JSONArray etf=client.search("KODEX 삼성전자SK하이닉스채권혼합50");assertTrue("New ETF must be searchable: "+etf,etf.length()>0);
