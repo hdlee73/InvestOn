@@ -177,7 +177,7 @@ public final class MarketClient {
         String xml=get("https://news.google.com/rss/search?q="+encode("한국 증시 주식 ETF when:1d")+"&hl=ko&gl=KR&ceid=KR:ko");
         XmlPullParser p=Xml.newPullParser(); p.setInput(new StringReader(xml));
         JSONArray out=new JSONArray(); JSONObject item=null; String tag="";
-        for(int e=p.getEventType();e!=XmlPullParser.END_DOCUMENT&&out.length()<5;e=p.next()) {
+        for(int e=p.getEventType();e!=XmlPullParser.END_DOCUMENT&&out.length()<10;e=p.next()) {
             if(e==XmlPullParser.START_TAG) { tag=p.getName(); if(tag.equals("item")) item=new JSONObject(); }
             if(e==XmlPullParser.TEXT&&item!=null&&Arrays.asList("title","link","pubDate","source").contains(tag)) item.put(tag,item.optString(tag)+p.getText());
             if(e==XmlPullParser.END_TAG) {
