@@ -39,7 +39,7 @@ jobs:
       - name: Build and lint
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease lintRelease
+          ./gradlew assembleDebug assembleRelease lintRelease
           mkdir build-kit
           cp app/build/outputs/apk/release/app-release-unsigned.apk build-kit/InvestOn-unsigned.apk
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" build-kit/apksigner.jar
@@ -47,3 +47,22 @@ jobs:
         with:
           name: InvestOn-build-kit
           path: build-kit/
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 15 launch verification
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash tests/android-launch.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: InvestOn-Android-verification
+          path: verification/android-*

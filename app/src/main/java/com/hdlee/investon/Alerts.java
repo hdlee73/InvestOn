@@ -12,9 +12,14 @@ public final class Alerts {
         n.createNotificationChannel(new NotificationChannel("monitor","집중 시세 확인",NotificationManager.IMPORTANCE_LOW));
     }
     static void schedule(Context c) {
+        try {
         JobScheduler s=c.getSystemService(JobScheduler.class);
         s.schedule(new JobInfo.Builder(73,new ComponentName(c,AlertJob.class)).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
             .setPeriodic(15*60*1000L).setPersisted(true).build());
+        } catch (RuntimeException e) {
+            // Optional background monitoring must never prevent opening the app.
+            android.util.Log.e("InvestOn", "Cannot schedule background price checks", e);
+        }
     }
     static void refresh(Context c) {
         try {
