@@ -10,8 +10,8 @@ import java.util.zip.*;
 public class BackupWorkbookTest extends Instrumentation {
     @Override public void onCreate(Bundle arguments) { super.onCreate(arguments);start(); }
     @Override public void onStart() { new Thread(()-> { Bundle result=new Bundle();try {
-        testRoundTrip();testEmptyBackup();testRejectNonWorkbook();testEditedExcelSharedStringsAndOrder();testLiveEtfSearch();
-        result.putString("stream","\nOK (5 tests)\n");finish(Activity.RESULT_OK,result);
+        testRoundTrip();testEmptyBackup();testRejectNonWorkbook();testEditedExcelSharedStringsAndOrder();testLiveEtfSearch();testLiveStockAndNewEtfSearch();
+        result.putString("stream","\nOK (6 tests)\n");finish(Activity.RESULT_OK,result);
     } catch(Throwable e) { StringWriter text=new StringWriter();e.printStackTrace(new PrintWriter(text));result.putString("stream","\nFAILURES\n"+text);finish(Activity.RESULT_CANCELED,result); } },"native-backup-tests").start(); }
     Instrumentation getInstrumentation() { return this; }
     static void fail(String text) { throw new AssertionError(text); }
@@ -55,4 +55,15 @@ public class BackupWorkbookTest extends Instrumentation {
         assertTrue("KODEX 200 must be found",kodex);assertTrue(client.search("KODEX200").length()>0);
         JSONArray catalog=client.etfs();boolean korean=false;for(int i=0;i<catalog.length();i++){String name=catalog.getJSONObject(i).getString("name");assertFalse(name.contains("\uFFFD"));if(name.matches(".*[가-힣].*"))korean=true;}assertTrue("Korean ETF names must be decoded correctly",korean);
     }
+    public void testLiveStockAndNewEtfSearch() throws Exception {
+        MarketClient client=new MarketClient(getTargetContext());JSONArray stocks=client.search("삼성전기");boolean found=false;
+        for(int i=0;i<stocks.length();i++){JSONObject item=stocks.getJSONObject(i);if(item.getString("symbol").equals("009150.KS")){found=true;assertTrue(item.getString("name").contains("삼성전기"));}}
+        if(!found)fail("Samsung Electro-Mechanics not found: "+stocks+" raw="+client.get("https://ac.finance.naver.com/ac?q="+MarketClient.encode("삼성전기")+"&q_enc=UTF-8&st=111&sug=all&frm=stock&r_format=json&r_enc=UTF-8"));
+        JSONArray etf=client.search("KODEX 삼성전자SK하이닉스채권혼합50");assertTrue("New ETF must be searchable: "+etf,etf.length()>0);
+        JSONObject item=etf.getJSONObject(0);assertEquals("ETF",item.getString("type"));assertTrue(item.getString("name").contains("삼성전자SK하이닉스채권혼합50"));
+        JSONObject quote=client.quote(item.getString("symbol"));assertTrue("New ETF quote must load",quote.getDouble("price")>0);assertTrue(client.history(item.getString("symbol")).getJSONArray("points").length()>1);
+        JSONObject proof=new JSONObject().put("stocks",stocks).put("newETF",etf).put("newETFQuote",quote);
+        try(OutputStream out=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),"native-stock-search-test.json"))){out.write(proof.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}
+    }
+
 }

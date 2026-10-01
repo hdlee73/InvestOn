@@ -34,4 +34,5 @@ adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell am instrument -w com.hdlee.investon.test/com.hdlee.investon.BackupWorkbookTest | tee verification/android-instrumentation.txt
 adb pull /sdcard/Android/data/com.hdlee.investon/files/native-backup-test.xlsx verification/android-backup-test.xlsx
 adb pull /sdcard/Android/data/com.hdlee.investon/files/native-search-test.json verification/android-search-test.json
-grep -F 'OK (5 tests)' verification/android-instrumentation.txt
+adb pull /sdcard/Android/data/com.hdlee.investon/files/native-stock-search-test.json verification/android-stock-search-test.json
+grep -F 'OK (6 tests)' verification/android-instrumentation.txt
