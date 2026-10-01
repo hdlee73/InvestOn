@@ -16,13 +16,17 @@ public class MainActivity extends Activity {
     String exportText=""; boolean visible;
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
-        web=new WebView(this); setContentView(web);
+        android.widget.FrameLayout root=new android.widget.FrameLayout(this);
+        web=new WebView(this);
+        root.addView(web,new android.widget.FrameLayout.LayoutParams(-1,-1));
+        setContentView(root);
         web.setBackgroundColor(0xfff5f7f8);
-        web.setOnApplyWindowInsetsListener((v,insets)->{
+        root.setOnApplyWindowInsetsListener((v,insets)->{
             if(Build.VERSION.SDK_INT>=30) { android.graphics.Insets i=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout()|WindowInsets.Type.ime()); v.setPadding(i.left,i.top,i.right,i.bottom); }
             else v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
             return insets;
         });
+        root.requestApplyInsets();
         WebSettings s=web.getSettings(); s.setJavaScriptEnabled(true); s.setDomStorageEnabled(false);
         s.setAllowFileAccess(false); s.setAllowContentAccess(false); s.setAllowFileAccessFromFileURLs(false); s.setAllowUniversalAccessFromFileURLs(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
