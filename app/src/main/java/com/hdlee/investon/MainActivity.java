@@ -81,19 +81,19 @@ public class MainActivity extends Activity {
             if(enabled) startForegroundService(new Intent(MainActivity.this,MonitorService.class)); else stopService(new Intent(MainActivity.this,MonitorService.class));
         } catch(Exception e) { web.evaluateJavascript("toast('집중 알림을 시작할 수 없습니다. 앱을 다시 열어 주세요.')",null); } }); }
         @JavascriptInterface public void export(String value) { if(value.length()>1_000_000) return; exportText=value;
-            runOnUiThread(()->{ Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("application/json").addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,"InvestOn-backup.json"); startActivityForResult(i,10); });
+            runOnUiThread(()->{ Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(BackupWorkbook.MIME).addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,"InvestOn-backup.xlsx"); startActivityForResult(i,10); });
         }
-        @JavascriptInterface public void importFile() { runOnUiThread(()->startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE),11)); }
+        @JavascriptInterface public void importFile() { runOnUiThread(()->startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType(BackupWorkbook.MIME).addCategory(Intent.CATEGORY_OPENABLE),11)); }
     }
     @Override protected void onActivityResult(int request,int result,Intent data) {
         super.onActivityResult(request,result,data); if(result!=RESULT_OK||data==null||data.getData()==null) return;
         Uri uri=data.getData();
         pool.submit(()->{ try {
-            if(request==10) { try(OutputStream out=getContentResolver().openOutputStream(uri)) { if(out==null) throw new IOException(); out.write(exportText.getBytes(StandardCharsets.UTF_8)); } runOnUiThread(()->web.evaluateJavascript("toast('백업 파일을 저장했습니다')",null)); }
-            if(request==11) { try(InputStream in=getContentResolver().openInputStream(uri); ByteArrayOutputStream out=new ByteArrayOutputStream()) {
-                if(in==null) throw new IOException(); byte[] bytes=new byte[4096]; int n; while((n=in.read(bytes))!=-1) { out.write(bytes,0,n); if(out.size()>1_000_000) throw new IOException("파일 크기 초과"); }
-                String text=new String(out.toByteArray(),StandardCharsets.UTF_8); runOnUiThread(()->web.evaluateJavascript("window.importBackup("+JSONObject.quote(text)+")",null));
+            if(request==10) { try(OutputStream out=getContentResolver().openOutputStream(uri)) { if(out==null) throw new IOException(); BackupWorkbook.write(new JSONObject(exportText),out); } runOnUiThread(()->web.evaluateJavascript("toast('백업 파일을 저장했습니다')",null)); }
+            if(request==11) { try(InputStream in=getContentResolver().openInputStream(uri)) {
+                if(in==null) throw new IOException(); String text=BackupWorkbook.read(in).toString();
+                runOnUiThread(()->web.evaluateJavascript("window.importBackup("+JSONObject.quote(text)+")",null));
             } }
-        } catch(Exception e) { runOnUiThread(()->web.evaluateJavascript("toast('파일을 읽거나 저장하지 못했습니다')",null)); } });
+        } catch(Exception e) { runOnUiThread(()->web.evaluateJavascript("toast("+JSONObject.quote("엑셀 처리 실패: "+(e.getMessage()==null?"파일을 확인해 주세요":e.getMessage()))+")",null)); } });
     }
 }

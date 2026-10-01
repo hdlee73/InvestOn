@@ -39,7 +39,7 @@ jobs:
       - name: Build and lint
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug assembleRelease lintRelease
+          ./gradlew assembleDebug assembleDebugAndroidTest assembleRelease lintRelease
           mkdir build-kit
           cp app/build/outputs/apk/release/app-release-unsigned.apk build-kit/InvestOn-unsigned.apk
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" build-kit/apksigner.jar

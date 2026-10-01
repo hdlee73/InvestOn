@@ -28,3 +28,9 @@ sleep 3
 adb shell pidof com.hdlee.investon
 adb logcat -d > verification/android-logcat.txt
 if grep -E 'FATAL EXCEPTION|Cannot schedule background price checks' verification/android-logcat.txt; then exit 1; fi
+
+# Native XLSX round trip, Excel shared strings/order edits, and live ETF catalog search.
+adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb shell am instrument -w com.hdlee.investon.test/android.test.InstrumentationTestRunner | tee verification/android-instrumentation.txt
+grep -F 'OK (5 tests)' verification/android-instrumentation.txt
+adb pull /sdcard/Android/data/com.hdlee.investon/files/native-backup-test.xlsx verification/android-backup-test.xlsx

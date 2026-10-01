@@ -28,7 +28,10 @@ public final class MarketClient {
             try(InputStream in=c.getInputStream(); ByteArrayOutputStream out=new ByteArrayOutputStream()) {
                 byte[] b=new byte[8192]; int n;
                 while((n=in.read(b))!=-1) { out.write(b,0,n); if(out.size()>8_000_000) throw new IOException("응답 크기 초과"); }
-                return new String(out.toByteArray(),StandardCharsets.UTF_8);
+                String contentType=c.getContentType();
+                java.nio.charset.Charset charset=StandardCharsets.UTF_8;
+                if(contentType!=null&&contentType.toLowerCase(Locale.ROOT).contains("euc-kr")) charset=java.nio.charset.Charset.forName("EUC-KR");
+                return new String(out.toByteArray(),charset);
             }
         } finally { c.disconnect(); }
     }
@@ -134,9 +137,36 @@ public final class MarketClient {
         if(points.length()<2) throw new IOException("차트 자료 없음");
         return new JSONObject().put("points",points).put("high",high).put("low",low).put("source","NAVER");
     }
+    static String normalized(String value) { return value.replaceAll("\\s+", "").toLowerCase(Locale.ROOT); }
+    JSONArray etfs() throws Exception {
+        android.content.SharedPreferences prefs=context.getSharedPreferences("catalog",0);
+        String cached=prefs.getString("etfs", "");
+        if(!cached.isEmpty()&&System.currentTimeMillis()-prefs.getLong("time",0)<86_400_000) return new JSONArray(cached);
+        try {
+            JSONArray items=new JSONObject(get("https://finance.naver.com/api/sise/etfItemList.nhn")).getJSONObject("result").getJSONArray("etfItemList");
+            JSONArray list=new JSONArray();
+            for(int i=0;i<items.length();i++) { JSONObject item=items.getJSONObject(i); String code=item.getString("itemcode");
+                if(code.matches("[0-9]{6}")) list.put(new JSONObject().put("symbol",code+".KS").put("name",item.getString("itemname")).put("currency","KRW").put("type","ETF"));
+            }
+            if(list.length()==0) throw new IOException("ETF 목록 없음");
+            prefs.edit().putString("etfs",list.toString()).putLong("time",System.currentTimeMillis()).apply(); return list;
+        } catch(Exception e) { if(!cached.isEmpty()) return new JSONArray(cached); throw e; }
+    }
     public JSONArray search(String query) throws Exception {
         if(query.length()>80) throw new IllegalArgumentException("검색어가 너무 깁니다");
         JSONArray out=new JSONArray(); Set<String> seen=new HashSet<>(); Exception last=null;
+        String key=normalized(query);
+        if(key.isEmpty()) return out;
+        try {
+            JSONArray catalog=etfs(); List<JSONObject> matches=new ArrayList<>();
+            for(int i=0;i<catalog.length();i++) { JSONObject item=catalog.getJSONObject(i);
+                if(normalized(item.getString("name")).contains(key)||normalized(item.getString("symbol")).contains(key)) matches.add(item);
+            }
+            matches.sort(Comparator.comparingInt(item-> { String name=normalized(item.optString("name")); return name.equals(key)?0:name.startsWith(key)?1:2; }));
+            for(JSONObject item:matches) if(seen.add(item.getString("symbol"))) out.put(item);
+            // Substring searches such as 200 must use the full ETF catalog, not autocomplete.
+            if(out.length()>0&&(key.matches("[0-9]{1,6}")||key.matches(".*(kodex|tiger|rise|ace|sol|plus|kosef|hanaro|etf).*"))) return out;
+        } catch(Exception e) { last=e; }
         try {
             JSONObject n=new JSONObject(get("https://ac.finance.naver.com/ac?q="+encode(query)+"&q_enc=UTF-8&st=111&r_format=json&r_enc=UTF-8"));
             collectNaver(n.getJSONArray("items"),out,seen);
@@ -162,10 +192,10 @@ public final class MarketClient {
     }
     void collectNaver(JSONArray a,JSONArray out,Set<String> seen) throws Exception {
         // Naver autocomplete nests [code],[name],[market] within result groups.
-        if(a.length()>=2&&a.optJSONArray(0)!=null&&a.optJSONArray(1)!=null) {
-            String code=a.getJSONArray(0).optString(0),name=a.getJSONArray(1).optString(0);
+        if(a.length()>=2) {
+            String code=a.optJSONArray(0)!=null?a.getJSONArray(0).optString(0):a.optString(0),name=a.optJSONArray(1)!=null?a.getJSONArray(1).optString(0):a.optString(1);
             if(code.matches("[0-9]{6}")) {
-                String market=a.optJSONArray(2)!=null?a.getJSONArray(2).optString(0):"";
+                String market=a.optJSONArray(2)!=null?a.getJSONArray(2).optString(0):a.optString(2);
                 String s=code+(market.contains("코스닥")||market.contains("KOSDAQ")?".KQ":".KS");
                 if(seen.add(s)) out.put(new JSONObject().put("symbol",s).put("name",name).put("currency","KRW").put("type","EQUITY"));
                 return;
