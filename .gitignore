@@ -4,3 +4,7 @@ local.properties
 *.jks
 *.keystore
 .env
+
+node_modules/
+verification/
+package-lock.json

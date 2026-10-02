@@ -50,7 +50,10 @@ public final class MarketClient {
     static double number(String s) { return Double.parseDouble(s.replace(",", "")); }
     public JSONObject quote(String raw) throws Exception {
         String s=symbol(raw); JSONObject q;
-        if(s.matches("[A-Z0-9]{6}\\.(KS|KQ)")) {
+        if(s.equals("^KS11")||s.equals("^KQ11")) {
+            // KOSPI/KOSDAQ: NAVER index quote is the primary (intraday) source, Yahoo is the fallback.
+            try { q=naverIndexQuote(s); } catch(Exception e) { q=yahooQuote(s); }
+        } else if(s.matches("[A-Z0-9]{6}\\.(KS|KQ)")) {
             try {
                 JSONObject o=new JSONObject(get("https://m.stock.naver.com/api/stock/"+s.substring(0,6)+"/basic"));
                 double price=number(o.getString("closePrice"));
@@ -72,12 +75,34 @@ public final class MarketClient {
         context.getSharedPreferences("quotes",0).edit().putString(s,q.toString()).apply();
         return q;
     }
+    /** Today's change is always measured against the previous trading day's close. */
+    JSONObject naverIndexQuote(String s) throws Exception {
+        String code=s.equals("^KS11")?"KOSPI":"KOSDAQ";
+        JSONObject o=new JSONObject(get("https://m.stock.naver.com/api/index/"+code+"/basic"));
+        double price=number(o.getString("closePrice"));
+        double change=number(o.getString("compareToPreviousClosePrice"));
+        String direction=o.optJSONObject("compareToPreviousPrice")!=null?o.getJSONObject("compareToPreviousPrice").optString("code"):"";
+        if("4".equals(direction)||"5".equals(direction)) change=-Math.abs(change);
+        else if("1".equals(direction)||"2".equals(direction)) change=Math.abs(change);
+        else if("3".equals(direction)) change=0;
+        if(!Double.isFinite(price)||price<=0) throw new IOException("지수 가격 없음");
+        double previous=price-change;
+        if(!Double.isFinite(previous)||previous<=0) throw new IOException("전일 종가 없음");
+        String trade=o.optString("localTradedAt","");
+        long time=0;
+        try { time=java.time.LocalDateTime.parse(trade.replace(" ","T")).atZone(java.time.ZoneId.of("Asia/Seoul")).toEpochSecond(); }
+        catch(Exception ignored) { try { time=java.time.OffsetDateTime.parse(trade).toEpochSecond(); } catch(Exception ignored2) {} }
+        return new JSONObject().put("symbol",s).put("price",price).put("previous",previous)
+            .put("currency","KRW").put("time",time).put("tradeLabel",trade)
+            .put("source","NAVER · 지수").put("market",o.optString("marketStatus",""));
+    }
     JSONObject yahooQuote(String s) throws Exception {
         JSONObject chart=yahooChart(s,"5d");
         JSONObject m=chart.getJSONObject("meta");
         double p=m.getDouble("regularMarketPrice");
         if(!Double.isFinite(p)||p<=0) throw new IOException("유효한 가격 없음");
-        double previous=m.optDouble("previousClose",Double.NaN);
+        // Indices: derive the previous close from daily bars so "today" is never measured against the 5-day range start.
+        double previous=s.startsWith("^")?Double.NaN:m.optDouble("previousClose",Double.NaN);
         if(!Double.isFinite(previous)) {
             java.time.ZoneId zone=java.time.ZoneId.of(m.optString("exchangeTimezoneName","America/New_York"));
             java.time.LocalDate latest=java.time.Instant.ofEpochSecond(m.optLong("regularMarketTime",0)).atZone(zone).toLocalDate();

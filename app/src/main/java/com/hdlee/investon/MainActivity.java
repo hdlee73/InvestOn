@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
             JSONObject out=new JSONObject(); getSharedPreferences("quotes",0).getAll().forEach((k,v)->{ try { out.put(k,new JSONObject((String)v)); } catch(Exception ignored) {} }); return out.toString();
         }
         @JavascriptInterface public void save(String value) {
-            try { if(value.length()>1_000_000) return; JSONObject o=new JSONObject(value); if(o.optJSONArray("watch")!=null&&o.getJSONArray("watch").length()>10) return;
+            try { if(value.length()>1_000_000) return; JSONObject o=new JSONObject(value);
                 getSharedPreferences("investon",0).edit().putString("state",o.toString()).apply(); Alerts.schedule(MainActivity.this);
             } catch(Exception ignored) {}
         }
