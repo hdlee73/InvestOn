@@ -60,3 +60,33 @@
 .holding-name-line .name{line-height:1.45;max-height:none;padding-bottom:.12em;-webkit-line-clamp:2}
 .holding-row{align-items:center;padding-top:13px;padding-bottom:13px;min-height:92px}
 .holding-meta{margin-top:5px}
+
+/* 1.0.8 */
+.index-panel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.index-quote{grid-column:span 2;min-width:0}
+.index-quote.wide{grid-column:span 3}
+.index-panel .index-time{grid-column:1/-1;font-size:9.5px}
+.index-quote .index-line{display:flex;gap:6px}
+.index-quote:not(.wide) .index-line{flex-direction:column;align-items:flex-start;gap:1px}
+.index-quote:not(.wide) .index-line strong{font-size:15px}
+.holding-price strong.up{color:var(--red)}
+.holding-price strong.down{color:var(--blue)}
+.holding-row{position:relative;background:white;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .16s ease,box-shadow .16s ease}
+.holding-row.dragging{z-index:5;transition:none;border-radius:10px;box-shadow:0 10px 28px rgba(20,30,40,.2)}
+.holding-table.is-sorting .holding-row:not(.dragging){transition:transform .16s ease}
+.sort-bar{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:13px;color:var(--muted)}
+.sort-bar select{flex:1;min-width:0;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:white;color:var(--ink);font-size:14px}
+.sort-bar .soft{white-space:nowrap;min-height:38px;padding:0 12px}
+.held-note{flex:1;font-size:12px;margin:0}
+.news-ticker{min-height:92px;display:flex;flex-direction:column;justify-content:center}
+.ticker-item{width:100%;display:flex;align-items:flex-start;gap:12px;text-align:left;padding:8px 0;line-height:1.6;animation:tickerIn .45s ease}
+.ticker-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.ticker-item .news-title{font-size:16px;font-weight:600}
+.ticker-dots{display:flex;justify-content:center;gap:5px;margin-top:6px}
+.ticker-dots i{width:6px;height:6px;border-radius:50%;background:#d6dde1}
+.ticker-dots i.on{background:var(--teal,#16796b)}
+@keyframes tickerIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.blog-head{margin-top:20px}
+.blog-item{width:100%;display:flex;align-items:flex-start;gap:12px;text-align:left;padding:13px 0;border-top:1px solid var(--line);line-height:1.6}
+.blog-item:first-child{border-top:0}
+.blog-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px}

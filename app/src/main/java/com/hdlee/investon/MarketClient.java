@@ -102,7 +102,7 @@ public final class MarketClient {
         double p=m.getDouble("regularMarketPrice");
         if(!Double.isFinite(p)||p<=0) throw new IOException("유효한 가격 없음");
         // Indices: derive the previous close from daily bars so "today" is never measured against the 5-day range start.
-        double previous=s.startsWith("^")?Double.NaN:m.optDouble("previousClose",Double.NaN);
+        double previous=s.startsWith("^")||s.endsWith("=X")?Double.NaN:m.optDouble("previousClose",Double.NaN);
         if(!Double.isFinite(previous)) {
             java.time.ZoneId zone=java.time.ZoneId.of(m.optString("exchangeTimezoneName","America/New_York"));
             java.time.LocalDate latest=java.time.Instant.ofEpochSecond(m.optLong("regularMarketTime",0)).atZone(zone).toLocalDate();
@@ -208,7 +208,7 @@ public final class MarketClient {
             if(a!=null) for(int i=0;i<a.length();i++) {
                 JSONObject v=a.getJSONObject(i); String kind=v.optString("quoteType"),s=v.optString("symbol");
                 boolean kr=s.endsWith(".KS")||s.endsWith(".KQ")||s.equals("^KS11")||s.equals("^KQ11");
-                boolean us=Arrays.asList("NMS","NYQ","NGM","NCM","ASE","PCX","BTS","NASDAQ","NYSE","NYSEArca").contains(v.optString("exchange"));
+                boolean us=Arrays.asList("NMS","NYQ","NGM","NCM","ASE","PCX","BTS","NASDAQ","NYSE","NYSEArca").contains(v.optString("exchange"))||(kind.equals("INDEX")&&s.startsWith("^")&&s.matches("\\^[A-Z0-9]{2,8}"));
                 if((kr||us)&&Arrays.asList("EQUITY","ETF","INDEX").contains(kind)&&seen.add(s))
                     out.put(new JSONObject().put("symbol",s).put("name",v.optString("shortname",v.optString("longname",s))).put("currency",kr?"KRW":"USD").put("type",kind));
             }
@@ -247,6 +247,55 @@ public final class MarketClient {
             }
         }
         for(int i=0;i<a.length();i++)if(a.optJSONArray(i)!=null)collectNaver(a.getJSONArray(i),out,seen);
+    }
+    /** Recent posts of the 메르 blog (blogId ranto28): RSS first, mobile list endpoint as fallback. */
+    public JSONArray blog() throws Exception {
+        JSONArray out=new JSONArray();
+        try { blogFromRss(out); } catch(Exception ignored) { }
+        if(out.length()==0) blogFromList(out);
+        if(out.length()==0) throw new IOException("블로그 글을 불러오지 못했습니다");
+        return out;
+    }
+    static String blogLink(String logNo) { return "https://m.blog.naver.com/ranto28/"+logNo; }
+    void blogFromRss(JSONArray out) throws Exception {
+        String xml=get("https://rss.blog.naver.com/ranto28.xml");
+        XmlPullParser p=Xml.newPullParser(); p.setInput(new StringReader(xml));
+        JSONObject item=null; String tag="";
+        for(int e=p.getEventType();e!=XmlPullParser.END_DOCUMENT&&out.length()<5;e=p.next()) {
+            if(e==XmlPullParser.START_TAG) { tag=p.getName(); if(tag.equals("item")) item=new JSONObject(); }
+            if((e==XmlPullParser.TEXT||e==XmlPullParser.CDSECT)&&item!=null&&Arrays.asList("title","link","pubDate").contains(tag)) item.put(tag,item.optString(tag)+p.getText());
+            if(e==XmlPullParser.END_TAG) {
+                if(p.getName().equals("item")&&item!=null) {
+                    java.util.regex.Matcher m=java.util.regex.Pattern.compile("ranto28/(\\d+)").matcher(item.optString("link"));
+                    String title=item.optString("title").trim();
+                    if(m.find()&&!title.isEmpty()) out.put(new JSONObject().put("title",title).put("link",blogLink(m.group(1))).put("date",rssDate(item.optString("pubDate"))));
+                    item=null;
+                }
+                tag="";
+            }
+        }
+    }
+    static String rssDate(String v) {
+        try {
+            java.text.SimpleDateFormat in=new java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z",Locale.ENGLISH);
+            java.text.SimpleDateFormat o=new java.text.SimpleDateFormat("yyyy.M.d.",Locale.KOREA);
+            o.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
+            return o.format(in.parse(v.trim()));
+        } catch(Exception e) { return ""; }
+    }
+    void blogFromList(JSONArray out) throws Exception {
+        String body=get("https://blog.naver.com/PostTitleListAsync.naver?blogId=ranto28&viewdate=&currentPage=1&categoryNo=&parentCategoryNo=&countPerPage=5");
+        String[] parts=body.split("\"logNo\"");
+        java.util.regex.Pattern title=java.util.regex.Pattern.compile("\"title\"\\s*:\\s*\"([^\"]*)\""),date=java.util.regex.Pattern.compile("\"addDate\"\\s*:\\s*\"([^\"]*)\"");
+        for(int i=1;i<parts.length&&out.length()<5;i++) {
+            java.util.regex.Matcher id=java.util.regex.Pattern.compile("^\\s*:\\s*\"?(\\d+)").matcher(parts[i]);
+            java.util.regex.Matcher t=title.matcher(parts[i]);
+            if(!id.find()||!t.find()) continue;
+            String name=URLDecoder.decode(t.group(1).replace("+"," "),"UTF-8").trim();
+            java.util.regex.Matcher d=date.matcher(parts[i]);
+            String when=d.find()?URLDecoder.decode(d.group(1).replace("+"," "),"UTF-8").trim():"";
+            if(!name.isEmpty()) out.put(new JSONObject().put("title",name).put("link",blogLink(id.group(1))).put("date",when));
+        }
     }
     public JSONArray news() throws Exception {
         String xml=get("https://news.google.com/rss/search?q="+encode("한국 증시 주식 ETF when:1d")+"&hl=ko&gl=KR&ceid=KR:ko");

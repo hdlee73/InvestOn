@@ -67,6 +67,7 @@ public class MainActivity extends Activity {
                         case "history": data=client.history(p.getString("symbol")); break;
                         case "search": data=client.search(p.getString("query")); break;
                         case "news": data=client.news(); break;
+                        case "blog": data=client.blog(); break;
                         default: throw new IllegalArgumentException("지원하지 않는 요청");
                     }
                     answer(id,data,null);

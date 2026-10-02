@@ -48,7 +48,7 @@
 
 ## 설치
 
-[투자온 1.0.7 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.7)에서 `InvestOn-1.0.7.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
+[투자온 1.0.8 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.8)에서 `InvestOn-1.0.8.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
 
 ## 빌드 / GitHub 게시
 
@@ -67,6 +67,13 @@ node --test tests/*.test.cjs
 
 CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-kit` artifact로 제공합니다. 서명 키를 공개 저장소나 Actions artifact에 저장하지 않습니다. 배포 담당자가 별도로 안전하게 보관한 키로 APK에 서명하고 Releases에 첨부합니다. 다음 업데이트도 같은 키를 사용해야 기존 설치 위에 업데이트할 수 있습니다.
 
+## 1.0.8 변경
+
+- 포트폴리오 현재가 전일 대비 색상(상승 빨강·하락 파랑), 보유종목 자동 관심종목 등록
+- 포트폴리오 길게 눌러 순서 변경, 종목별 합산 오름차순/내림차순 정렬
+- 관심종목 상단에 나스닥·S&P 500·원/달러 표시, 미국 주식·ETF·지수 선택 가능
+- 뉴스 한 건씩 순환 표시, 메르의 블로그 최근 글 5개 (RSS, 실패 시 모바일 목록 대체)
+
 ## 1.0.7 변경
 
 - 코스피·코스닥을 NAVER 지수 시세로 장중 10초마다 갱신하고, 전일 종가 대비 오늘 등락·등락률로 표시 (실패 시 Yahoo Finance 대체)
@@ -81,6 +88,7 @@ CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-k
 
 ## 검증 상태
 
+- 1.0.8: 단위 테스트와 Playwright 화면 흐름 테스트(포트폴리오 길게 눌러 정렬, 종목별 정렬, 뉴스 순환, 미국 종목 선택 포함) 통과. NAVER 블로그 RSS와 해외 지수 시세는 개발 환경 네트워크 제한으로 실제 응답을 확인하지 못했고 Android 빌드는 GitHub Actions에서 확인합니다.
 - 1.0.7: 단위 테스트와 Playwright 화면 흐름 테스트(길게 눌러 끌기 정렬, 오늘의 손익, 관심종목 제한 해제 포함) 통과. NAVER 지수 시세는 개발 환경 네트워크 제한으로 실제 응답을 확인하지 못했으며 APK 빌드·에뮬레이터 검증은 GitHub Actions 결과를 따릅니다.
 
 - 손익·계좌 합계·환산·소수 수량·부호·백업 형식 자동 테스트
