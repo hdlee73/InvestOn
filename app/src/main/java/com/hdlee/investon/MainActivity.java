@@ -74,6 +74,7 @@ public class MainActivity extends Activity {
                 } catch(Exception e) { answer(id,null,e.getMessage()==null?"연결을 확인해 주세요":e.getMessage()); }
             });
         }
+        @JavascriptInterface public String version() { try { return getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception e) { return ""; } }
         @JavascriptInterface public void open(String url) { runOnUiThread(()->{ try { Uri u=Uri.parse(url); if("https".equals(u.getScheme())&&u.getHost()!=null) startActivity(new Intent(Intent.ACTION_VIEW,u)); } catch(Exception ignored) {} }); }
         @JavascriptInterface public void permission() { runOnUiThread(()->{ if(Build.VERSION.SDK_INT>=33) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"},7); }); }
         @JavascriptInterface public boolean notificationsEnabled() { return getSystemService(NotificationManager.class).areNotificationsEnabled(); }
