@@ -115,3 +115,8 @@
 .acc-5{--acc:#6f9a2f;--acc-bg:#eff6e1}
 .acc-6{--acc:#2b9fb8;--acc-bg:#e2f4f8}
 .acc-7{--acc:#a07a4a;--acc-bg:#f4ede3}
+
+/* 1.0.9 · swipe left to delete a watchlist row */
+.watch-card{touch-action:pan-y}
+.watch-card.swiping{transition:none}
+.watch-card.swiping::after{content:'삭제';position:absolute;top:0;bottom:0;left:100%;width:140px;display:flex;align-items:center;padding-left:18px;background:var(--red);color:white;font-weight:700}

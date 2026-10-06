@@ -41,7 +41,14 @@ const LONG_PRESS_MS=320,PRESS_SLOP=9;
 document.addEventListener('touchmove',e=>{if(dragging&&e.cancelable)e.preventDefault()},{passive:false});
 function dropWatch(from,to){state.watch=Core.moveItem(state.watch,from,to);save()}
 function dropHolding(from,to,rows){const ids=Core.moveItem(rows.map(r=>r.dataset.dragId),from,to);state.holdings=rows[0].dataset.dragKind==='group'?Core.orderByGroups(state.holdings,ids):Core.reorderSubset(state.holdings,ids);save()}
-function bindWatchDrag(){document.querySelectorAll('.watch-card[data-drag-row]').forEach(card=>{card.oncontextmenu=e=>e.preventDefault();card.onpointerdown=e=>beginPress(e,card,dropWatch)});document.querySelectorAll('.holding-row[data-drag-row]').forEach(card=>{card.oncontextmenu=e=>e.preventDefault();card.onpointerdown=e=>beginPress(e,card,dropHolding)})}
+function bindWatchDrag(){document.querySelectorAll('.watch-card[data-drag-row]').forEach(card=>{card.oncontextmenu=e=>e.preventDefault();card.onpointerdown=e=>{beginPress(e,card,dropWatch);beginSwipeDelete(e,card)}});document.querySelectorAll('.holding-row[data-drag-row]').forEach(card=>{card.oncontextmenu=e=>e.preventDefault();card.onpointerdown=e=>beginPress(e,card,dropHolding)})}
+function beginSwipeDelete(e,card){
+ if(!e.isPrimary||(e.pointerType==='mouse'&&e.button!==0))return;
+ const id=e.pointerId,x0=e.clientX,y0=e.clientY,symbol=card.dataset.watchSymbol,LIMIT=96;let on=false,dx=0;
+ const move=v=>{if(v.pointerId!==id||dragging)return;const mx=v.clientX-x0,my=v.clientY-y0;if(!on){if(mx<-12&&Math.abs(mx)>Math.abs(my)*1.5){on=true;card.classList.add('swiping');try{card.setPointerCapture(id)}catch(_){}}else return}dx=Math.max(-LIMIT-24,Math.min(0,mx));card.style.transform=`translateX(${dx}px)`};
+ const end=v=>{if(v.pointerId!==id)return;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);if(!on)return;card.classList.remove('swiping');card.style.transform='';const swallow=ev=>{ev.stopPropagation();ev.preventDefault()};window.addEventListener('click',swallow,true);setTimeout(()=>window.removeEventListener('click',swallow,true),350);
+  if(v.type==='pointerup'&&dx<=-LIMIT){const s=state.watch.find(w=>w.symbol===symbol);if(!s)return;if(state.holdings.some(h=>h.symbol===symbol))return toast('포트폴리오 보유종목은 관심종목에서 삭제할 수 없어요');confirmDialog('관심종목 삭제',`${s.name}을(를) 관심종목과 가격 알림에서 삭제할까요?`,()=>{state.watch=state.watch.filter(w=>w.symbol!==symbol);state.rules=state.rules.filter(r=>r.symbol!==symbol);save();close();render()})}};
+ window.addEventListener('pointermove',move);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end)}
 function beginPress(e,card,onDrop){
  if(dragging||pressing||!e.isPrimary||(e.pointerType==='mouse'&&e.button!==0))return;
  const list=card.parentElement,rows=[...list.children].filter(x=>x.hasAttribute('data-drag-row')),from=rows.indexOf(card);
