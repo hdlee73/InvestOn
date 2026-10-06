@@ -37,6 +37,7 @@ public class MainActivity extends Activity {
         });
         web.loadUrl("file:///android_asset/index.html");
         Alerts.channels(this); Alerts.schedule(this);
+        pool.submit(()->{ if(UpdateChecker.check(this,false)) runOnUiThread(()->{ if(!isDestroyed()) web.evaluateJavascript("window.updateFound&&updateFound()",null); }); });
     }
     @Override public void onResume() { super.onResume(); visible=true; if(web!=null) web.evaluateJavascript("window.appVisibility&&appVisibility(true)",null); }
     @Override public void onPause() { visible=false; web.evaluateJavascript("window.appVisibility&&appVisibility(false)",null); super.onPause(); }
@@ -75,6 +76,7 @@ public class MainActivity extends Activity {
             });
         }
         @JavascriptInterface public String version() { try { return getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception e) { return ""; } }
+        @JavascriptInterface public String updateInfo() { return UpdateChecker.info(MainActivity.this); }
         @JavascriptInterface public void open(String url) { runOnUiThread(()->{ try { Uri u=Uri.parse(url); if("https".equals(u.getScheme())&&u.getHost()!=null) startActivity(new Intent(Intent.ACTION_VIEW,u)); } catch(Exception ignored) {} }); }
         @JavascriptInterface public void permission() { runOnUiThread(()->{ if(Build.VERSION.SDK_INT>=33) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"},7); }); }
         @JavascriptInterface public boolean notificationsEnabled() { return getSystemService(NotificationManager.class).areNotificationsEnabled(); }
