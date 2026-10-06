@@ -9,7 +9,7 @@ public class MonitorService extends Service {
     @Override public void onCreate() { super.onCreate(); Alerts.channels(this);
         PendingIntent open=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class),PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,MonitorService.class).setAction("STOP"),PendingIntent.FLAG_IMMUTABLE);
-        startForeground(9,new Notification.Builder(this,"monitor").setSmallIcon(R.drawable.ic_notification).setContentTitle("투자온 · 집중 알림")
+        startForeground(9,new Notification.Builder(this,"monitor").setSmallIcon(R.drawable.ic_notification).setContentTitle("InvestOn · 집중 알림")
             .setContentText("목표가격 30초 확인 · Android 시간 제한 적용").setContentIntent(open).addAction(new Notification.Action.Builder(null,"중지",stop).build()).build());
         running=true; timer=Executors.newSingleThreadScheduledExecutor(); timer.scheduleWithFixedDelay(()->Alerts.refresh(this),0,30,TimeUnit.SECONDS);
         // Exit safely before Android 15+ 6h time budget. Boot only schedules periodic jobs.
