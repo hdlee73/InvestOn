@@ -203,7 +203,10 @@ public final class MarketClient {
         } catch(Exception e) { last=e; }
         if(out.length()>0&&query.matches(".*[가-힣].*")) return out;
         try {
-            JSONObject y=new JSONObject(get("https://query1.finance.yahoo.com/v1/finance/search?q="+encode(query)+"&quotesCount=15&newsCount=0"));
+            String path="/v1/finance/search?q="+encode(query)+"&quotesCount=20&newsCount=0";
+            JSONObject y;
+            try { y=new JSONObject(get("https://query1.finance.yahoo.com"+path)); }
+            catch(Exception first) { y=new JSONObject(get("https://query2.finance.yahoo.com"+path)); }
             JSONArray a=y.optJSONArray("quotes");
             if(a!=null) for(int i=0;i<a.length();i++) {
                 JSONObject v=a.getJSONObject(i); String kind=v.optString("quoteType"),s=v.optString("symbol");

@@ -1,4 +1,4 @@
-# 투자온 · InvestOn
+# InvestOn
 
 깔끔한 한국 관심종목 + 한국·미국 포트폴리오 Android 앱. Android 8.0 이상, 인터넷 연결 필요.
 
@@ -48,7 +48,7 @@
 
 ## 설치
 
-[투자온 1.0.8 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.8)에서 `InvestOn-1.0.8.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
+[InvestOn 1.0.9 릴리즈](https://github.com/hdlee73/InvestOn/releases/tag/v1.0.9)에서 `InvestOn-1.0.9.apk`를 내려받아 설치합니다. Android 8.0 이상. 처음 실행한 뒤 알림 권한을 허용해 주세요.
 
 ## 빌드 / GitHub 게시
 
@@ -66,6 +66,14 @@ node --test tests/*.test.cjs
 ### APK 서명
 
 CI에서는 unsigned release APK와 Google SDK의 apksigner를 `InvestOn-build-kit` artifact로 제공합니다. 서명 키를 공개 저장소나 Actions artifact에 저장하지 않습니다. 배포 담당자가 별도로 안전하게 보관한 키로 APK에 서명하고 Releases에 첨부합니다. 다음 업데이트도 같은 키를 사용해야 기존 설치 위에 업데이트할 수 있습니다.
+
+## 1.0.9 변경
+
+- 앱 이름을 InvestOn으로 변경
+- 뉴스는 2건씩 보여주고 좌우 스와이프로 다음·이전 뉴스로 이동
+- 포트폴리오 계좌별 보기에서 계좌마다 다른 배경색으로 구분 (전체 보기의 계좌명 표시도 같은 색)
+- 미국 지수 검색 보강: nasdaq, dow, s&p, russell, vix 등 영문·한글 별칭으로 검색
+- 보유종목 입력에 매입총액 추가: 매입단가 또는 매입총액 중 하나만 입력해도 저장
 
 ## 1.0.8 변경
 
