@@ -11,5 +11,18 @@ android {
         testInstrumentationRunner 'com.hdlee.investon.BackupWorkbookTest'
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
-    buildTypes { release { minifyEnabled false } }
+    // Release signing: only when a keystore is provided (Gradle properties or environment variables).
+    // Without one, assembleRelease still produces an unsigned APK as before.
+    def ksFile = findProperty('INVESTON_KEYSTORE_FILE') ?: System.getenv('INVESTON_KEYSTORE_FILE')
+    signingConfigs {
+        if (ksFile) {
+            release {
+                storeFile file(ksFile)
+                storePassword findProperty('INVESTON_KEYSTORE_PASSWORD') ?: System.getenv('INVESTON_KEYSTORE_PASSWORD')
+                keyAlias findProperty('INVESTON_KEY_ALIAS') ?: System.getenv('INVESTON_KEY_ALIAS')
+                keyPassword findProperty('INVESTON_KEY_PASSWORD') ?: System.getenv('INVESTON_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes { release { minifyEnabled false; if (ksFile) signingConfig signingConfigs.release } }
 }
