@@ -9,6 +9,7 @@ public final class Alerts {
     static void channels(Context c) {
         NotificationManager n=c.getSystemService(NotificationManager.class);
         n.createNotificationChannel(new NotificationChannel("prices","목표가격 도달",NotificationManager.IMPORTANCE_HIGH));
+        n.createNotificationChannel(new NotificationChannel("update","앱 업데이트",NotificationManager.IMPORTANCE_DEFAULT));
         n.createNotificationChannel(new NotificationChannel("monitor","집중 시세 확인",NotificationManager.IMPORTANCE_LOW));
     }
     static void schedule(Context c) {
