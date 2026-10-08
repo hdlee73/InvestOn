@@ -6,8 +6,8 @@ android {
         applicationId 'com.hdlee.investon'
         minSdk 26
         targetSdk 35
-        versionCode 13
-        versionName '1.0.12'
+        versionCode 14
+        versionName '1.0.13'
         testInstrumentationRunner 'com.hdlee.investon.BackupWorkbookTest'
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
