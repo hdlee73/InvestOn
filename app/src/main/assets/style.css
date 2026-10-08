@@ -133,3 +133,10 @@
 .index-quote:not(.wide){background:#eaf0fa}
 .market-note{margin:0;padding:14px 2px;font-size:11px;color:var(--muted)}
 @media(max-width:350px){.watch-identity .name{font-size:12px}.watch-card,.watch-table-head{gap:4px}}
+
+/* 1.0.13 · index tiles: name on the left, price and change aligned to the right */
+.index-quote{text-align:right}
+.index-quote .index-line b{text-align:left}
+.index-quote:not(.wide) .index-line{align-items:stretch}
+.index-quote:not(.wide) .index-line strong{text-align:right}
+.index-quote.wide .index-line{justify-content:space-between}
